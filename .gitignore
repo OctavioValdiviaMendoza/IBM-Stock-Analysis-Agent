@@ -1,0 +1,21 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Streamlit / logs / misc
+.streamlit/
+*.log
+
+# OS / editor files
+.DS_Store
+.vscode/
+.idea/
