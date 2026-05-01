@@ -1,7 +1,11 @@
+import os
 import requests
 import streamlit as st
 
-BACKEND_URL = "http://localhost:8000/analyze"
+BACKEND_URL = os.getenv(
+    "BACKEND_URL",
+    "http://localhost:8000/analyze"
+)
 
 st.set_page_config(page_title="IBM Stock Analysis Agent", layout="wide")
 
@@ -14,6 +18,7 @@ query = st.text_input(
 )
 
 def call_backend(user_query: str):
+    response = None
     try:
         response = requests.post(
             BACKEND_URL,
@@ -25,7 +30,8 @@ def call_backend(user_query: str):
     except requests.RequestException as e:
         detail = ""
         try:
-            detail = response.text
+            if response is not None:
+                detail = response.text
         except Exception:
             pass
         return None, f"{e}\n{detail}"
