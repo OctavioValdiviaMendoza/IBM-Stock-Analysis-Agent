@@ -129,15 +129,15 @@ def extract_json_from_text(text: str) -> dict[str, Any] | None:
 
 def normalize_payload(obj: dict[str, Any]) -> dict[str, Any]:
     scores = obj.get("scores") if isinstance(obj.get("scores"), dict) else {}
-    normalized_scores = {key: clamp_score(scores.get(key, 1)) for key in REQUIRED_SCORE_KEYS}
+    normalized_scores = {key: clamp_score(scores.get(key, 0)) for key in REQUIRED_SCORE_KEYS}
 
     recommendation = str(obj.get("recommendation", "Watchlist")).strip()
     if recommendation not in {"Buy", "Watchlist", "Avoid"}:
-        recommendation = "Watchlist"
+        recommendation = "Cannot determine"
 
     confidence = str(obj.get("confidence", "Medium")).strip()
     if confidence not in {"High", "Medium", "Low"}:
-        confidence = "Medium"
+        confidence = "Cannot determine"
 
     risk_note = obj.get("risk_note")
     if not isinstance(risk_note, list):
