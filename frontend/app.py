@@ -75,6 +75,12 @@ st.markdown("""
         border: 1px solid rgba(239,68,68,0.35);
     }
 
+    .pill-gray {
+        background: rgba(148,163,184,0.16);
+        color: #cbd5e1;
+        border: 1px solid rgba(148,163,184,0.35);
+    }
+
     .pill-blue {
         background: rgba(59,130,246,0.16);
         color: #93c5fd;
@@ -107,6 +113,12 @@ st.markdown("""
         background: linear-gradient(135deg, rgba(220,38,38,0.26), rgba(239,68,68,0.12));
         border: 1px solid rgba(239,68,68,0.35);
         color: #fecaca;
+    }
+
+    .neutral-box {
+        background: linear-gradient(135deg, rgba(100,116,139,0.26), rgba(148,163,184,0.12));
+        border: 1px solid rgba(148,163,184,0.35);
+        color: #e2e8f0;
     }
 
     .section-title {
@@ -184,28 +196,33 @@ ORDERED_KEYS = [
 ]
 
 
-def color_for_recommendation(value: str) -> str:
-    if value == "Buy":
-        return "#22c55e"
-    if value == "Watchlist":
-        return "#facc15"
-    return "#ef4444"
+def clamp_score(value) -> int:
+    try:
+        return max(0, min(5, int(value)))
+    except (TypeError, ValueError):
+        return 0
 
 
 def pill_class_for_confidence(value: str) -> str:
-    if value == "High":
+    value = (value or "").strip().lower()
+    if value == "high":
         return "pill-green"
-    if value == "Medium":
+    if value == "medium":
         return "pill-yellow"
-    return "pill-red"
+    if value == "low":
+        return "pill-red"
+    return "pill-gray"
 
 
 def box_class_for_recommendation(value: str) -> str:
-    if value == "Buy":
+    value = (value or "").strip().lower()
+    if value == "buy":
         return "buy-box"
-    if value == "Watchlist":
+    if value == "watchlist":
         return "watch-box"
-    return "avoid-box"
+    if value == "avoid":
+        return "avoid-box"
+    return "neutral-box"
 
 
 def safe_text(value: str) -> str:
@@ -215,13 +232,21 @@ def safe_text(value: str) -> str:
 def score_color(score: int) -> str:
     if score >= 4:
         return "#22c55e"
-    if score == 3:
+    if score >= 2:
         return "#facc15"
-    return "#ef4444"
+    if score == 1:
+        return "#fb7185"
+    return "#94a3b8"
+
+
+def score_caption(score: int) -> str:
+    if score == 0:
+        return "No data"
+    return f"{int((score / 5) * 100)}% strength"
 
 
 def render_score_circle(label: str, score: int):
-    score = max(1, min(5, int(score)))
+    score = clamp_score(score)
     percent = int((score / 5) * 100)
     color = score_color(score)
     safe_label = safe_text(label)
@@ -258,7 +283,7 @@ def render_score_circle(label: str, score: int):
                 </div>
             </div>
             <div class="circle-label">{safe_label}</div>
-            <div class="score-caption">{percent}% strength</div>
+            <div class="score-caption">{score_caption(score)}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -266,16 +291,20 @@ def render_score_circle(label: str, score: int):
 
 
 def render_overall_circle(scores: dict):
-    values = [max(1, min(5, int(scores.get(k, 1)))) for k in ORDERED_KEYS]
-    avg_score = sum(values) / len(values)
+    values = [clamp_score(scores.get(k, 0)) for k in ORDERED_KEYS]
+    avg_score = sum(values) / len(values) if values else 0
     percent = int((avg_score / 5) * 100)
 
     if avg_score >= 4:
         color = "#22c55e"
-    elif avg_score >= 3:
+    elif avg_score >= 2:
         color = "#facc15"
+    elif avg_score > 0:
+        color = "#fb7185"
     else:
-        color = "#ef4444"
+        color = "#94a3b8"
+
+    caption = "No data available" if avg_score == 0 else f"{percent}% composite score"
 
     st.markdown(
         f"""
@@ -309,7 +338,7 @@ def render_overall_circle(scores: dict):
                     <div style="font-size: 0.85rem; color: #94a3b8;">average / 5</div>
                 </div>
             </div>
-            <div class="score-caption">{percent}% composite score</div>
+            <div class="score-caption">{caption}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -337,8 +366,8 @@ def call_backend(user_query: str):
 
 
 def render_result(data: dict, query_text: str):
-    recommendation = str(data.get("recommendation", "Watchlist"))
-    confidence = str(data.get("confidence", "Medium"))
+    recommendation = str(data.get("recommendation", "Cannot determine"))
+    confidence = str(data.get("confidence", "Cannot determine"))
     scores = data.get("scores", {}) if isinstance(data.get("scores"), dict) else {}
     rationale = str(data.get("rationale", "No rationale provided."))
     risk_notes = data.get("risk_note", [])
@@ -351,6 +380,8 @@ def render_result(data: dict, query_text: str):
 
     if not isinstance(risk_notes, list):
         risk_notes = []
+
+    normalized_scores = {key: clamp_score(scores.get(key, 0)) for key in ORDERED_KEYS}
 
     st.markdown(
         f"""
@@ -383,13 +414,13 @@ def render_result(data: dict, query_text: str):
         )
 
     with top_col2:
-        render_overall_circle(scores)
+        render_overall_circle(normalized_scores)
 
     st.markdown('<div class="section-title">Score Breakdown</div>', unsafe_allow_html=True)
     score_cols = st.columns(len(ORDERED_KEYS))
     for col, key in zip(score_cols, ORDERED_KEYS):
         with col:
-            render_score_circle(key, scores.get(key, 1))
+            render_score_circle(key, normalized_scores.get(key, 0))
 
     lower_col1, lower_col2 = st.columns([1.5, 1])
 
