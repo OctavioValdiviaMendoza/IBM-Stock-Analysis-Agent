@@ -235,7 +235,7 @@ def call_ibm_agent(query: str) -> dict[str, Any]:
         raise HTTPException(status_code=500, detail="Missing IBM_API_ENDPOINT environment variable")
 
     token = get_iam_access_token()
-    url = f"{IBM_API_ENDPOINT}/api/v1/orchestrate/{IBM_AGENT_ID}/chat/completions"
+    url = f"{IBM_API_ENDPOINT}/v1/orchestrate/{IBM_AGENT_ID}/chat/completions"
 
     body = {
         "messages": [
