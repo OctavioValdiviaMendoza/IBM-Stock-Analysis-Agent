@@ -411,7 +411,6 @@ def render_result(data: dict, query_text: str):
                 {safe_text(recommendation)}
             </div>
             <div>
-                <span class="metric-pill pill-blue">Recommendation</span>
                 <span class="metric-pill {pill_class_for_confidence(confidence)}">
                     Confidence: {safe_text(confidence)}
                 </span>
@@ -476,7 +475,7 @@ def render_result(data: dict, query_text: str):
 st.markdown("""
 <div class="hero-card">
     <div style="font-size: 2.2rem; font-weight: 900; margin-bottom: 0.4rem;">
-        IBM Stock Analysis Agent
+        IBM Stock Analysis Agent By Octavio Valdiva & Leonardo Garcia
     </div>
     <div class="small-muted" style="font-size: 1rem;">
         Enter a stock prompt and get a cleaner, visual AI analysis with recommendation strength,
