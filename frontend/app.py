@@ -366,13 +366,16 @@ def call_backend(user_query: str):
 
 
 def render_result(data: dict, query_text: str):
+    real_ticker_check = False
     recommendation = str(data.get("recommendation", "Cannot determine"))
     confidence = str(data.get("confidence", "Cannot determine"))
     scores = data.get("scores", {}) if isinstance(data.get("scores"), dict) else {}
     for score in scores:
-        if score == 0:
-            recommendation = "Cannot determine"
-            confidence = "Cannot determine"
+        if score != 0:
+            real_ticker_check = True
+    if not real_ticker_check:
+        recommendation = "Cannot determine"
+        confidence = "Cannot determine"
     rationale = str(data.get("rationale", "No rationale provided."))
     risk_notes = data.get("risk_note", [])
     disclaimer = str(
