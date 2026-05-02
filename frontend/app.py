@@ -369,6 +369,10 @@ def render_result(data: dict, query_text: str):
     recommendation = str(data.get("recommendation", "Cannot determine"))
     confidence = str(data.get("confidence", "Cannot determine"))
     scores = data.get("scores", {}) if isinstance(data.get("scores"), dict) else {}
+    for score in scores:
+        if score == 0:
+            recommendation = "Cannot determine"
+            confidence = "Cannot determine"
     rationale = str(data.get("rationale", "No rationale provided."))
     risk_notes = data.get("risk_note", [])
     disclaimer = str(
