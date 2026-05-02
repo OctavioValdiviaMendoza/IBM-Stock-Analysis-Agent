@@ -59,8 +59,8 @@ def clamp_score(value: Any) -> int:
     try:
         n = int(round(float(value)))
     except (TypeError, ValueError):
-        n = 1
-    return max(1, min(5, n))
+        n = 0
+    return max(0, min(5, n))
 
 
 def redact_headers(headers: dict[str, str]) -> dict[str, str]:
